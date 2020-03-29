@@ -2,9 +2,7 @@
 #include <glib.h>
 
 void file_monitor_cb(GFileMonitor *monitor, GFile *file, GFile *other, GFileMonitorEvent event, gpointer user_data) {
-    char *path = NULL;
-
-    path = g_file_get_path(file);
+    char *path = g_file_get_path(file);
     switch (event) {
         case G_FILE_MONITOR_EVENT_DELETED:
             g_print("%s deleted\n", path);
@@ -13,29 +11,20 @@ void file_monitor_cb(GFileMonitor *monitor, GFile *file, GFile *other, GFileMoni
             g_print("%s created\n", path);
             break;
         default:
-            g_print("%s event %d\n", path, event);
             break;
     }
     g_free(path);
 }
 
 int main(int argc, char *argv[]) {
-    GMainLoop *loop = NULL;
-    GFile *file = NULL;
-    GFileMonitor *monitor = NULL;
-    GError *error = NULL;
+    int ret = EXIT_SUCCESS;
 
-    if (argc != 2) {
-        g_print("Usage : %s <file path>\n", argv[0]);
-        goto clean;
-    }
+    GMainLoop *loop = g_main_loop_new(NULL, FALSE);
 
-    loop = g_main_loop_new(NULL, FALSE);
-
-    file = g_file_new_for_commandline_arg(argv[1]);
-    monitor = g_file_monitor(file, G_FILE_MONITOR_WATCH_MOVES, NULL, &error);
-    if (error) {
-        g_error("Failed while monitor %s (%s)\n", argv[1], error->message);
+    GFile *file = g_file_new_for_commandline_arg("monitored");
+    GFileMonitor *monitor = g_file_monitor(file, G_FILE_MONITOR_WATCH_MOVES, NULL, NULL);
+    if (!monitor) {
+        ret = EXIT_FAILURE;
         goto clean;
     }
     g_signal_connect(G_OBJECT(monitor), "changed", G_CALLBACK(file_monitor_cb), NULL);
@@ -43,10 +32,9 @@ int main(int argc, char *argv[]) {
     g_main_loop_run(loop);
 
 clean:
-    if (loop) g_main_loop_unref(loop);
-    if (file) g_object_unref(file);
-    if (monitor) g_object_unref(monitor);
-    if (error) g_error_free(error);
+    g_main_loop_unref(loop);
+    g_object_unref(file);
+    g_object_unref(monitor);
 
-    return 0;
+    return ret;
 }
