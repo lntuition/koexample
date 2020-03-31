@@ -1,0 +1,8 @@
+<node>
+    <interface name="com.glib.dbus">
+        <method name="func">
+            <arg name="in" direction="in" type="s" />
+            <arg name="out" direction="out" type="s" />
+        </method>
+    </interface>
+<node>
